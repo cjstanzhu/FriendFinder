@@ -19,10 +19,10 @@
         <br>
 
         <h5>Name (Required)</h5>
-        <input id="userName" class="form-control" type="text" required="">
+        <input id="userName" class="form-control" type="text">
 
         <h5>Link to Photo Image (Required)</h5>
-        <input id="userPhoto" class="form-control" type="text" required="">
+        <input id="userPhoto" class="form-control" type="text">
         <hr>
 
         <h3><strong>Questions</strong></h3>
@@ -264,8 +264,7 @@
 
         <footer class="footer">
             <div class="container">
-                <a href="/api/friends">API Friends List</a>
-                <!-- <a href="/api/tables">API Table Link</a> | <a href="/api/waitlist">API Wait List</a> -->
+                <a href="/">Home</a> | <a href="/api/friends">API Friends List</a>
             </div>
         </footer>
         <br>
@@ -276,27 +275,29 @@
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Best Match</h5>
+                    <h5 class="modal-title">Best Match(es)</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
-                <div id="modalBody" class="modal-body">
-                    <!-- <p>match name</p> -->
-                    <!-- <p>match photo</p> -->
+                <div class="modal-body">
+                    <div class="container-fluid">
+                        <div class="row">
+                            <div id="modalBody" class="col-12 justify-content-center text-center flex-wrap d-flex">
+                                <!-- <p>match photo</p> -->
+                                <!-- <p>match name</p> -->
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                    <!-- <button type="button" class="btn btn-primary">Save changes</button> -->
                 </div>
             </div>
         </div>
     </div>
     
     <script src="https://code.jquery.com/jquery.js"></script>
-    <!-- <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
-        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
-        crossorigin="anonymous"></script> -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
         integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
         crossorigin="anonymous"></script>
@@ -310,60 +311,61 @@
 
             let userScores = [];
             let radioInputs = $(":radio");
-            // let unsansweredCount = 10;
-
+            let unansweredCount = 10;
+            
             for (let i = 0; i < radioInputs.length; i++) {
                 if (radioInputs[i].checked === true) {
-                    // unansweredCount--;
-                    userScores.push(parseInt(radioInputs[i].value));
+                    unansweredCount--;
+                    userScores.push(radioInputs[i].value);
                 };
             };
 
-            let newFriend = {
-                name: $("#userName").val().trim(),
-                photo: $("#userPhoto").val().trim(),
-                scores: userScores
+            if ($("#userName").val().trim() === "" || $("#userPhoto").val().trim() === "" || unansweredCount !== 0) {
+                alert("Please input responses to all the fields.");
+            } else {
+                $("#modalBody").empty();
 
-            };
+                let newFriend = {
+                    name: $("#userName").val().trim(),
+                    photo: $("#userPhoto").val().trim(),
+                    scores: userScores
 
-            $.post("/api/friends", newFriend, function(data) {
-                // console.log("after post");
-                // console.log(data);
+                };
 
-                if (data) {
-                    // alert("Yay! You are officially booked!"); //insert modal code
+                $.post("/api/friends", newFriend, function(data) {
+                    if (data) {
+                        for (let i = 0; i < data.length; i++) {
+                            let matchDiv = $("<div>");
+                            let matchName = $("<p>").text("Name: " + data[i].name);
+                            let matchImage = $("<img>");
 
-                    for (let i = 0; i < data.length; i++) {
-                        let matchDiv = $("<div>");
-                        let matchName = $("<p>").text("Name: " + data[i].name);
-                        var matchImage = $("<img>");
+                            matchImage.attr("src", data[i].photo);
+                            matchImage.addClass("img-fluid");
+                            matchImage.css("height", "300px");
+                            matchImage.css("width", "300px");
+                            
+                            matchDiv.append(matchImage);
+                            matchDiv.append(matchName);
 
-                        matchImage.attr("src", data[i].photo);
-                        
-                        matchDiv.append(matchImage);
-                        matchDiv.append(matchName);
-                        // topicDiv.css("float", "left");
-                        // topicDiv.css("margin-right", "15px");
+                            $("#modalBody").append(matchDiv);
+                            $("#modalBox").modal();
+                        };
 
-                        $("#modalBody").append(matchDiv);
-                        $("#modalBox").modal();
+                    } else {
+                        alert("Please input responses to all the fields and try again.");
                     };
 
-                } else {
-                    alert("Sorry you are on the wait list");
-                };
+                    $("#userName").val("");
+                    $("#userPhoto").val("");
 
-                $("#userName").val("");
-                $("#userPhoto").val("");
+                    for (let i = 0; i < radioInputs.length; i++) {
+                        radioInputs[i].checked = false;
+                        unansweredCount = 10;
+                        
+                    };
 
-                for (let i = 0; i < radioInputs.length; i++) {
-                    radioInputs[i].checked = false;
-                    // unansweredCount = 10;
-                    
-                };
-
-            });
-
+                });
+            };
         });
 
     </script>
